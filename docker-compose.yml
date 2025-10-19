@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./frontend/uploads:/app/uploads
+    networks:
+      - ctf-net
+    environment:
+      - REDIS_HOST=redis
+      - INTERNAL_API_URL=http://internal-api:3000
+    depends_on:
+      - redis
+      - internal-api
+
+  internal-api:
+    build: ./internal-api
+    networks:
+      - ctf-net
+
+  worker:
+    build: ./document-processor
+    volumes:
+      - ./frontend/uploads:/app/uploads
+    networks:
+      - ctf-net
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - internal-api
+
+  redis:
+    image: "redis:alpine"
+    networks:
+      - ctf-net
+
+networks:
+  ctf-net:
